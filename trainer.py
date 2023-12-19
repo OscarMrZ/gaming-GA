@@ -8,13 +8,14 @@ import argparse
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, Flatten, Dense, BatchNormalization
+from tensorflow.keras.layers import ConvLSTM2D, Conv2D, Conv3D, Flatten, Dense, BatchNormalization, LSTM, TimeDistributed, Activation
 from tensorflow.keras.models import clone_model
 
 import pygad.kerasga
 
-from game_v4 import run_game
+from games.christmas_jump.v4_mf import run_game
 
+# Global var of the model
 model = None
 
 # Testing
@@ -61,6 +62,92 @@ def cute_net(input_shape):
     model.add(Dense(32, activation='relu'))
 
     # Output layer with 3 neurons (for a 3-class classification) and softmax activation
+    model.add(Dense(3, activation='softmax'))
+
+    # Compile the model
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
+
+    return model
+
+# Time-dist net
+def timedist_net():
+
+    model = Sequential()
+
+    # TimeDistributed CNN layers with Batch Normalization
+    model.add(TimeDistributed(Conv2D(8, (3, 3), activation='relu'), input_shape=(4, 75, 75, 1)))
+    model.add(TimeDistributed(BatchNormalization()))
+    model.add(TimeDistributed(Conv2D(16, (3, 3), activation='relu')))
+    model.add(TimeDistributed(BatchNormalization()))
+    model.add(TimeDistributed(Conv2D(32, (3, 3), activation='relu')))
+    model.add(TimeDistributed(BatchNormalization()))
+    model.add(TimeDistributed(Flatten()))
+
+    # LSTM layer
+    model.add(LSTM(32, activation='tanh'))
+
+    # Fully connected layers
+    model.add(Dense(16, activation='relu'))
+
+    # Output layer
+    model.add(Dense(3, activation='softmax'))
+
+    # Compile the model
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
+
+    return model
+
+# CONVlstm net
+def convlstm_net():
+
+    model = Sequential()
+
+    # ConvLSTM2D layers with Batch Normalization
+    model.add(ConvLSTM2D(16, (3, 3), activation='relu', input_shape=(4, 75, 75, 1), return_sequences=True))
+    model.add(BatchNormalization())
+    model.add(ConvLSTM2D(32, (3, 3), activation='relu'))
+    model.add(BatchNormalization())
+
+    # Flatten the output
+    model.add(Flatten())
+
+    # Fully connected layers
+    model.add(Dense(32, activation='relu'))
+
+    # Output layer
+    model.add(Dense(3, activation='softmax'))
+
+    # Compile the model
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
+
+    return model
+
+# CONV3d net
+def conv3d_net():
+
+    model = Sequential()
+
+    # Conv3D layers with Batch Normalization
+    model.add(Conv3D(8, (2, 3, 3), activation='relu', input_shape=(4, 75, 75, 1)))
+    model.add(BatchNormalization())
+    model.add(Conv3D(16, (2, 3, 3), activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Conv3D(32, (2, 3, 3), activation='relu'))
+    model.add(BatchNormalization())
+
+    # Flatten the output
+    model.add(Flatten())
+
+    # Fully connected layers
+    model.add(Dense(32, activation='relu'))
+
+    # Output layer
     model.add(Dense(3, activation='softmax'))
 
     # Compile the model
@@ -141,8 +228,7 @@ def main(pretrained_model_path=None):
     if pretrained_model_path:
         model = keras.models.load_model(pretrained_model_path)
     else:
-        model = stable_net((75, 75, 4))
-        # model = cute_net((50, 50, 4))
+        model = timedist_net()
 
     model.summary()
 
