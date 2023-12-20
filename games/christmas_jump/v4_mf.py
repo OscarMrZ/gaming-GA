@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import time
 import argparse
+import os
 
 import tensorflow as tf
 from tensorflow import keras
@@ -187,6 +188,8 @@ def get_action(frames, model, print_probs=False):
 def run_game(sleep_time, model_list):
 
     global speed
+
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1920, 0)  # Example for a 1080p primary monitor
 
     # Initialize the game
     pygame.init()

@@ -13,7 +13,7 @@ from tensorflow.keras.models import clone_model
 
 import pygad.kerasga
 
-from games.christmas_jump.v4_mf import run_game
+from games.christmas_jump.v3_inc import run_game
 
 # Global var of the model
 model = None
@@ -24,14 +24,18 @@ def tiny_cnn(input_shape):
     model = Sequential()
 
     # Convolutional layers
-    model.add(Conv2D(8, (3, 3), activation='relu', input_shape=input_shape))
+    model.add(Conv2D(4, (3, 3), activation='relu', input_shape=input_shape))
+    model.add(BatchNormalization())
+    model.add(Conv2D(8, (3, 3), activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(16, (3, 3), activation='relu'))
     model.add(BatchNormalization())
 
     # Flatten the output
     model.add(Flatten())
 
     # Fully connected layer
-    model.add(Dense(8, activation='relu'))
+    model.add(Dense(16, activation='relu'))
 
     # Output layer with 2 neurons (for "jump" and "fall") and sigmoid activation
     model.add(Dense(3, activation='softmax'))
@@ -43,35 +47,7 @@ def tiny_cnn(input_shape):
 
     return model
 
-def cute_net(input_shape):
-
-    model = Sequential()
-
-    # Conv layers
-    model.add(Conv2D(4, (3, 3), activation='relu', input_shape=input_shape))
-    model.add(BatchNormalization())
-    model.add(Conv2D(8, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Conv2D(16, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-
-    # Flatten the output
-    model.add(Flatten())
-
-    # Fully connected layers
-    model.add(Dense(32, activation='relu'))
-
-    # Output layer with 3 neurons (for a 3-class classification) and softmax activation
-    model.add(Dense(3, activation='softmax'))
-
-    # Compile the model
-    model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
-                  metrics=['accuracy'])
-
-    return model
-
-# Time-dist net
+# Time-dist net (too big)
 def timedist_net():
 
     model = Sequential()
@@ -101,7 +77,7 @@ def timedist_net():
 
     return model
 
-# CONVlstm net
+# CONVlstm net (doesn't converge?) RUNNING
 def convlstm_net():
 
     model = Sequential()
@@ -128,7 +104,7 @@ def convlstm_net():
 
     return model
 
-# CONV3d net
+# CONV3d net (doesn't converge)
 def conv3d_net():
 
     model = Sequential()
@@ -228,14 +204,14 @@ def main(pretrained_model_path=None):
     if pretrained_model_path:
         model = keras.models.load_model(pretrained_model_path)
     else:
-        model = timedist_net()
+        model = tiny_cnn((50, 50, 1))
 
     model.summary()
 
     try:
 
         # Create the KERAS GA object
-        keras_ga = pygad.kerasga.KerasGA(model=model, num_solutions=15)
+        keras_ga = pygad.kerasga.KerasGA(model=model, num_solutions=7)
 
         # Check if a pre-trained model is used
         if pretrained_model_path:
@@ -254,11 +230,11 @@ def main(pretrained_model_path=None):
 
         # Trainer object
         ga_instance = pygad.GA(num_generations=250,
-                            num_parents_mating=6,
+                            num_parents_mating=2,
                             fitness_func=fitness_func,
-                            fitness_batch_size=15,
+                            fitness_batch_size=6,
                             initial_population=initial_population,
-                            mutation_probability=0.20,
+                            mutation_probability=0.10,
                             on_generation=on_generation,
                             suppress_warnings=True)
 
