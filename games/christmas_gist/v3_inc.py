@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import time
 import argparse
+import os
 
 import tensorflow as tf
 from tensorflow import keras
@@ -15,7 +16,7 @@ FALL = 2
 GROUND = 0
 AIR = 1
 
-INC_INTERVAL = 10000
+MAX_TIME = 300000
 
 game_size = (400, 400)
 speed = 5
@@ -172,6 +173,8 @@ def run_game(sleep_time, model_list):
 
     global speed
 
+    # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1920, 0)  # Example for a 1080p primary monitor
+
     # Initialize the game
     pygame.init()
     pygame.display.set_caption("test_game")
@@ -310,7 +313,7 @@ def run_game(sleep_time, model_list):
         
         # Check for maximum time of 2 minutes
         current_time = pygame.time.get_ticks()
-        if current_time - start_time > 240000:  # 240000 milliseconds = 4 minutes
+        if current_time - start_time > MAX_TIME:
             run = False
     # Generate a list of scores
     results = []
@@ -323,7 +326,8 @@ def main(model_path):
 
     # Load the model and start the game
     model = keras.models.load_model(model_path)
-    run_game(0, [model])
+    results = run_game(0, [model])
+    print("Score: " + str(results))
 
 if __name__ == "__main__":
     
