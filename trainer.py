@@ -13,7 +13,7 @@ from tensorflow.keras.models import clone_model
 
 import pygad.kerasga
 
-from games.christmas_jump.v3_inc import run_game
+from games.christmas_gist.v3_inc import run_game
 
 # Global var of the model
 model = None
@@ -50,33 +50,6 @@ def timedist_net():
 
     return model
 
-# CONVlstm net (doesn't converge?) RUNNING
-def convlstm_net():
-
-    model = Sequential()
-
-    # ConvLSTM2D layers with Batch Normalization
-    model.add(ConvLSTM2D(16, (3, 3), activation='relu', input_shape=(4, 75, 75, 1), return_sequences=True))
-    model.add(BatchNormalization())
-    model.add(ConvLSTM2D(32, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-
-    # Flatten the output
-    model.add(Flatten())
-
-    # Fully connected layers
-    model.add(Dense(32, activation='relu'))
-
-    # Output layer
-    model.add(Dense(3, activation='softmax'))
-
-    # Compile the model
-    model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
-                  metrics=['accuracy'])
-
-    return model
-
 # CONV3d net (doesn't converge)
 def conv3d_net():
 
@@ -101,6 +74,32 @@ def conv3d_net():
 
     # Compile the model
     model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
+
+    return model
+
+def atom_net(input_shape):
+
+    model = Sequential()
+
+    # Convolutional layers
+    model.add(Conv2D(4, (3, 3), activation='relu', input_shape=input_shape))
+    model.add(BatchNormalization())
+    model.add(Conv2D(8, (3, 3), activation='relu', input_shape=input_shape))
+    model.add(BatchNormalization())
+
+    # Flatten the output
+    model.add(Flatten())
+
+    # Fully connected layer
+    model.add(Dense(16, activation='relu'))
+
+    # Output layer with 2 neurons (for "jump" and "fall") and sigmoid activation
+    model.add(Dense(3, activation='softmax'))
+
+    # Compile the model
+    model.compile(loss='categorical_crossentropy', # Changed to binary_crossentropy
                   optimizer='adam',
                   metrics=['accuracy'])
 
@@ -212,7 +211,7 @@ def main(pretrained_model_path=None):
     try:
 
         # Create the KERAS GA object
-        keras_ga = pygad.kerasga.KerasGA(model=model, num_solutions=7)
+        keras_ga = pygad.kerasga.KerasGA(model=model, num_solutions=13)
 
         # Check if a pre-trained model is used
         if pretrained_model_path:
@@ -231,11 +230,11 @@ def main(pretrained_model_path=None):
 
         # Trainer object
         ga_instance = pygad.GA(num_generations=250,
-                            num_parents_mating=2,
+                            num_parents_mating=5,
                             fitness_func=fitness_func,
-                            fitness_batch_size=6,
+                            fitness_batch_size=13,
                             initial_population=initial_population,
-                            mutation_probability=0.10,
+                            mutation_probability=0.15,
                             on_generation=on_generation,
                             suppress_warnings=True)
 
