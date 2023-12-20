@@ -19,33 +19,6 @@ from games.christmas_jump.v3_inc import run_game
 model = None
 
 # Testing
-def tiny_cnn(input_shape):
-
-    model = Sequential()
-
-    # Convolutional layers
-    model.add(Conv2D(4, (3, 3), activation='relu', input_shape=input_shape))
-    model.add(BatchNormalization())
-    model.add(Conv2D(8, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Conv2D(16, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-
-    # Flatten the output
-    model.add(Flatten())
-
-    # Fully connected layer
-    model.add(Dense(16, activation='relu'))
-
-    # Output layer with 2 neurons (for "jump" and "fall") and sigmoid activation
-    model.add(Dense(3, activation='softmax'))
-
-    # Compile the model
-    model.compile(loss='categorical_crossentropy', # Changed to binary_crossentropy
-                  optimizer='adam',
-                  metrics=['accuracy'])
-
-    return model
 
 # Time-dist net (too big)
 def timedist_net():
@@ -159,6 +132,34 @@ def stable_net(input_shape):
 
     return model
 
+def tiny_net(input_shape):
+
+    model = Sequential()
+
+    # Convolutional layers
+    model.add(Conv2D(4, (3, 3), activation='relu', input_shape=input_shape))
+    model.add(BatchNormalization())
+    model.add(Conv2D(8, (3, 3), activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(16, (3, 3), activation='relu'))
+    model.add(BatchNormalization())
+
+    # Flatten the output
+    model.add(Flatten())
+
+    # Fully connected layer
+    model.add(Dense(16, activation='relu'))
+
+    # Output layer with 2 neurons (for "jump" and "fall") and sigmoid activation
+    model.add(Dense(3, activation='softmax'))
+
+    # Compile the model
+    model.compile(loss='categorical_crossentropy', # Changed to binary_crossentropy
+                  optimizer='adam',
+                  metrics=['accuracy'])
+
+    return model
+
 ### TRAINING FUNCTIONS ### 
 def fitness_func(ga_instance, solutions, solutions_indices):
 
@@ -204,7 +205,7 @@ def main(pretrained_model_path=None):
     if pretrained_model_path:
         model = keras.models.load_model(pretrained_model_path)
     else:
-        model = tiny_cnn((50, 50, 1))
+        model = tiny_net((50, 50, 1))
 
     model.summary()
 

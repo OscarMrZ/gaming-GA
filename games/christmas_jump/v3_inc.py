@@ -310,7 +310,7 @@ def run_game(sleep_time, model_list):
         
         # Check for maximum time of 2 minutes
         current_time = pygame.time.get_ticks()
-        if current_time - start_time > 240000:  # 120000 milliseconds = 2 minutes
+        if current_time - start_time > 240000:  # 240000 milliseconds = 4 minutes
             run = False
     # Generate a list of scores
     results = []
