@@ -8,7 +8,7 @@ import argparse
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import ConvLSTM2D, Conv2D, Conv3D, Flatten, Dense, BatchNormalization, LSTM, TimeDistributed, Activation
+from tensorflow.keras.layers import MaxPooling2D, Conv2D, Conv3D, Flatten, Dense, BatchNormalization, LSTM, TimeDistributed, Activation
 from tensorflow.keras.models import clone_model
 
 import pygad.kerasga
@@ -79,32 +79,6 @@ def conv3d_net():
 
     return model
 
-def atom_net(input_shape):
-
-    model = Sequential()
-
-    # Convolutional layers
-    model.add(Conv2D(4, (3, 3), activation='relu', input_shape=input_shape))
-    model.add(BatchNormalization())
-    model.add(Conv2D(8, (3, 3), activation='relu', input_shape=input_shape))
-    model.add(BatchNormalization())
-
-    # Flatten the output
-    model.add(Flatten())
-
-    # Fully connected layer
-    model.add(Dense(16, activation='relu'))
-
-    # Output layer with 2 neurons (for "jump" and "fall") and sigmoid activation
-    model.add(Dense(3, activation='softmax'))
-
-    # Compile the model
-    model.compile(loss='categorical_crossentropy', # Changed to binary_crossentropy
-                  optimizer='adam',
-                  metrics=['accuracy'])
-
-    return model
-
 # Works
 def stable_net(input_shape):
     
@@ -135,25 +109,22 @@ def tiny_net(input_shape):
 
     model = Sequential()
 
-    # Convolutional layers
-    model.add(Conv2D(4, (3, 3), activation='relu', input_shape=input_shape))
-    model.add(BatchNormalization())
-    model.add(Conv2D(8, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Conv2D(16, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
+    # First Convolutional layer
+    model.add(Conv2D(16, (3, 3), activation='relu', input_shape=input_shape))
+    model.add(Conv2D(24, (3, 3), activation='relu'))
+    model.add(Conv2D(32, (3, 3), activation='relu'))
 
     # Flatten the output
     model.add(Flatten())
 
     # Fully connected layer
-    model.add(Dense(16, activation='relu'))
+    model.add(Dense(32, activation='relu'))
 
-    # Output layer with 2 neurons (for "jump" and "fall") and sigmoid activation
+    # Output layer with 3 neurons (for a 3-class classification) and softmax activation
     model.add(Dense(3, activation='softmax'))
 
     # Compile the model
-    model.compile(loss='categorical_crossentropy', # Changed to binary_crossentropy
+    model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
                   metrics=['accuracy'])
 
@@ -211,7 +182,7 @@ def main(pretrained_model_path=None):
     try:
 
         # Create the KERAS GA object
-        keras_ga = pygad.kerasga.KerasGA(model=model, num_solutions=13)
+        keras_ga = pygad.kerasga.KerasGA(model=model, num_solutions=8)
 
         # Check if a pre-trained model is used
         if pretrained_model_path:
@@ -230,9 +201,9 @@ def main(pretrained_model_path=None):
 
         # Trainer object
         ga_instance = pygad.GA(num_generations=250,
-                            num_parents_mating=5,
+                            num_parents_mating=3,
                             fitness_func=fitness_func,
-                            fitness_batch_size=13,
+                            fitness_batch_size=8,
                             initial_population=initial_population,
                             mutation_probability=0.15,
                             on_generation=on_generation,

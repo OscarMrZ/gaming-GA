@@ -130,10 +130,6 @@ def run_game():
     background_image = pygame.image.load('./data/background.png').convert()
     background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    game_over_image = pygame.image.load('./data/Game_over.png').convert()
-    game_over_image = pygame.transform.scale(game_over_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
-
-
     screen.blit(background_image, (0, 0))
     pygame.display.set_caption("Game")
 
